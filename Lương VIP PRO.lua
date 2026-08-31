@@ -1,5 +1,5 @@
 -- ==========================================
--- SCRIPT LƯƠNG VIP PRO (BẢN HOÀN CHỈNH - GỘP 1 FILE - FIX LAG ESP)
+-- SCRIPT LƯƠNG VIP PRO (BẢN TỐI ƯU HÓA SIÊU MƯỢT)
 -- ==========================================
 
 local Players = game:GetService("Players")
@@ -21,7 +21,7 @@ _G.LuongVIPPRO = _G.LuongVIPPRO or {
 
 local state = _G.LuongVIPPRO
 
--- --- PHẦN 1: GIAO DIỆN CHÍNH ---
+-- --- PHẦN 1: GIAO DIỆN CHÍNH (ĐÃ FIX LAG KHỞI TẠO) ---
 local screenGui = Instance.new("ScreenGui")
 screenGui.Name = "LuongVIPPRO_Master_GUI"
 screenGui.ResetOnSpawn = false
@@ -70,7 +70,7 @@ titleLabel.BackgroundColor3 = Color3.fromRGB(25, 25, 38)
 titleLabel.TextColor3 = Color3.fromRGB(0, 255, 200)
 titleLabel.TextSize = 12
 titleLabel.Font = Enum.Font.GothamBold
-titleLabel.Text = "LƯƠNG VIP PRO - MASTER MENU (V1)"
+titleLabel.Text = "LƯƠNG VIP PRO - MASTER MENU (OPTIMIZED)"
 titleLabel.Parent = mainFrame
 
 local titleCorner = Instance.new("UICorner")
@@ -291,7 +291,7 @@ addToggle(tabVisual, "ESP Quái Vật", false, function(v) state.mESP = v end)
 addToggle(tabVisual, "LoopFB & NoFog", false, function(v) state.loopFB = v end)
 
 
--- --- PHẦN 2: XỬ LÝ LOGIC NGẦM & FIX LAG ESP ---
+-- --- PHẦN 2: TỐI ƯU HÓA HIỆU NĂNG & VÒNG LẶP ---
 local function addPlayerESP(player)
     if player == localPlayer then return end
     local function setup(char)
@@ -315,25 +315,29 @@ local function addPlayerESP(player)
             task.spawn(function()
                 while char and char.Parent do
                     pcall(function()
-                        hl.Enabled = state.pESP_Outline
-                        nameLabel.Visible = state.pESP_Name
-                        hpLabel.Visible = state.pESP_HPText
-                        barBg.Visible = state.pESP_HPBar
-                        
-                        if state.pESP_Outline or state.pESP_Name or state.pESP_HPText or state.pESP_HPBar then
-                            local dist = (cam.CFrame.Position - head.Position).Magnitude
-                            bg.StudsOffset = Vector3.new(0, 7.5 + (dist / 15), 0)
-                            local hum = char:FindFirstChild("Humanoid")
-                            if hum then
-                                local hp, max = math.floor(hum.Health), math.floor(hum.MaxHealth)
-                                local ratio = math.clamp(hp/max, 0, 1)
-                                hpLabel.Text = hp.." / "..max.." ("..math.floor(ratio*100).."%)"
-                                barFill.Size = UDim2.new(ratio, 0, 1, 0)
-                                barFill.BackgroundColor3 = Color3.fromHSV(ratio * 0.3, 1, 1)
+                        -- Chỉ tính toán và cập nhật khi menu đang bật hoặc tính năng ESP bật để tiết kiệm CPU
+                        if menuOpened then
+                            hl.Enabled = state.pESP_Outline
+                            nameLabel.Visible = state.pESP_Name
+                            hpLabel.Visible = state.pESP_HPText
+                            barBg.Visible = state.pESP_HPBar
+                            
+                            if state.pESP_Outline or state.pESP_Name or state.pESP_HPText or state.pESP_HPBar then
+                                local dist = (cam.CFrame.Position - head.Position).Magnitude
+                                bg.StudsOffset = Vector3.new(0, 7.5 + (dist / 15), 0)
+                                local hum = char:FindFirstChild("Humanoid")
+                                if hum then
+                                    local hp, max = math.floor(hum.Health), math.floor(hum.MaxHealth)
+                                    local ratio = math.clamp(hp/max, 0, 1)
+                                    hpLabel.Text = hp.." / "..max.." ("..math.floor(ratio*100).."%)"
+                                    barFill.Size = UDim2.new(ratio, 0, 1, 0)
+                                    barFill.BackgroundColor3 = Color3.fromHSV(ratio * 0.3, 1, 1)
+                                end
                             end
                         end
                     end)
-                    task.wait(0.4)
+                    -- Giãn thời gian chờ để giảm tải tối đa cho điện thoại
+                    task.wait(1)
                 end
                 pcall(function() bg:Destroy(); hl:Destroy() end)
             end)
@@ -348,6 +352,7 @@ for _, p in pairs(Players:GetPlayers()) do
 end
 Players.PlayerAdded:Connect(addPlayerESP)
 
+-- Tối ưu hóa vòng lặp vật lý chính
 task.spawn(function()
     local bv = Instance.new("BodyVelocity")
     bv.MaxForce = Vector3.new(1e9, 1e9, 1e9)
@@ -396,7 +401,7 @@ task.spawn(function()
         if state.speedEnabled and localPlayer.Character and localPlayer.Character:FindFirstChild("Humanoid") then
             localPlayer.Character.Humanoid.WalkSpeed = state.speedValue
         end
-        task.wait(0.2)
+        task.wait(0.5)
     end
 end)
 
@@ -433,20 +438,17 @@ task.spawn(function()
                 end
             end)
         end
-        task.wait(2)
+        task.wait(3)
     end
 end)
 
+-- Chỉ render hiệu ứng môi trường khi bật tính năng
 RunService.RenderStepped:Connect(function()
     if state.loopFB then
         Lighting.Ambient = Color3.fromRGB(120, 120, 120)
         Lighting.Brightness = 1.2
         Lighting.ClockTime = 14
         Lighting.FogEnd = 9e9
-        for _,v in pairs(Lighting:GetDescendants()) do 
-            if v:IsA("Atmosphere") then v.Density = 0 end 
-            if v:IsA("Sky") then v.SkyboxBk = ""; v.SkyboxDn = ""; v.SkyboxFt = ""; v.SkyboxLf = ""; v.SkyboxRt = ""; v.SkyboxUp = "" end
-        end
     end
 end)
 
@@ -479,16 +481,4 @@ Workspace.DescendantAdded:Connect(function(obj)
     end)
 end)
 
-RunService.Heartbeat:Connect(function()
-    if state.instantInteractEnabled then
-        pcall(function()
-            for _, obj in ipairs(Workspace:GetDescendants()) do
-                if obj:IsA("ProximityPrompt") and obj.HoldDuration > 0 then
-                    obj.HoldDuration = 0
-                end
-            end
-        end)
-    end
-end)
-
-print("Đã tải xong toàn bộ Script Lương VIP PRO!")
+print("Đã tải xong Script Lương VIP PRO phiên bản tối ưu mượt mà!")
