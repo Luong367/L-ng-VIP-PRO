@@ -1,5 +1,5 @@
 -- ==========================================
--- SCRIPT LƯƠNG VIP PRO (BẢN TỐI ƯU HÓA SIÊU MƯỢT)
+-- SCRIPT LƯƠNG VIP PRO (BẢN TỐI ƯU & ICON MỚI)
 -- ==========================================
 
 local Players = game:GetService("Players")
@@ -21,7 +21,7 @@ _G.LuongVIPPRO = _G.LuongVIPPRO or {
 
 local state = _G.LuongVIPPRO
 
--- --- PHẦN 1: GIAO DIỆN CHÍNH (ĐÃ FIX LAG KHỞI TẠO) ---
+-- --- PHẦN 1: GIAO DIỆN CHÍNH ---
 local screenGui = Instance.new("ScreenGui")
 screenGui.Name = "LuongVIPPRO_Master_GUI"
 screenGui.ResetOnSpawn = false
@@ -33,10 +33,10 @@ if not screenGui.Parent then
 end
 
 local toggleButton = Instance.new("ImageButton")
-toggleButton.Size = UDim2.new(0, 45, 0, 45)
-toggleButton.Position = UDim2.new(0, 20, 0.5, -22)
+toggleButton.Size = UDim2.new(0, 50, 0, 50)
+toggleButton.Position = UDim2.new(0, 20, 0.5, -25)
 toggleButton.BackgroundColor3 = Color3.fromRGB(20, 20, 30)
-toggleButton.Image = "rbxassetid://106195151528657"
+toggleButton.Image = "rbxassetid://17234938686" -- Avatar mới
 toggleButton.Parent = screenGui
 
 local btnCorner = Instance.new("UICorner")
@@ -290,7 +290,6 @@ addToggle(tabVisual, "ESP Tên Player", false, function(v) state.pESP_Name = v e
 addToggle(tabVisual, "ESP Quái Vật", false, function(v) state.mESP = v end)
 addToggle(tabVisual, "LoopFB & NoFog", false, function(v) state.loopFB = v end)
 
-
 -- --- PHẦN 2: TỐI ƯU HÓA HIỆU NĂNG & VÒNG LẶP ---
 local function addPlayerESP(player)
     if player == localPlayer then return end
@@ -315,7 +314,6 @@ local function addPlayerESP(player)
             task.spawn(function()
                 while char and char.Parent do
                     pcall(function()
-                        -- Chỉ tính toán và cập nhật khi menu đang bật hoặc tính năng ESP bật để tiết kiệm CPU
                         if menuOpened then
                             hl.Enabled = state.pESP_Outline
                             nameLabel.Visible = state.pESP_Name
@@ -336,7 +334,6 @@ local function addPlayerESP(player)
                             end
                         end
                     end)
-                    -- Giãn thời gian chờ để giảm tải tối đa cho điện thoại
                     task.wait(1)
                 end
                 pcall(function() bg:Destroy(); hl:Destroy() end)
@@ -352,7 +349,6 @@ for _, p in pairs(Players:GetPlayers()) do
 end
 Players.PlayerAdded:Connect(addPlayerESP)
 
--- Tối ưu hóa vòng lặp vật lý chính
 task.spawn(function()
     local bv = Instance.new("BodyVelocity")
     bv.MaxForce = Vector3.new(1e9, 1e9, 1e9)
@@ -442,7 +438,6 @@ task.spawn(function()
     end
 end)
 
--- Chỉ render hiệu ứng môi trường khi bật tính năng
 RunService.RenderStepped:Connect(function()
     if state.loopFB then
         Lighting.Ambient = Color3.fromRGB(120, 120, 120)
@@ -481,4 +476,4 @@ Workspace.DescendantAdded:Connect(function(obj)
     end)
 end)
 
-print("Đã tải xong Script Lương VIP PRO phiên bản tối ưu mượt mà!")
+print("Đã tải xong Script Lương VIP PRO phiên bản mượt mà!")
