@@ -1,5 +1,5 @@
 -- ==========================================
--- SCRIPT LƯƠNG VIP PRO (PHẦN 1/2 - TỐI ƯU TOÀN MAP & ESP)
+-- SCRIPT LƯƠNG VIP PRO (PHẦN 1/2 - FIX ESP & LIGHTING)
 -- ==========================================
 
 local Players = game:GetService("Players")
@@ -64,7 +64,7 @@ titleLabel.BackgroundColor3 = Color3.fromRGB(25, 25, 38)
 titleLabel.TextColor3 = Color3.fromRGB(0, 255, 200)
 titleLabel.TextSize = 12
 titleLabel.Font = Enum.Font.GothamBold
-titleLabel.Text = "LƯƠNG VIP PRO - FULL MAP ESP (1/2)"
+titleLabel.Text = "LƯƠNG VIP PRO - STABLE FIX (1/2)"
 titleLabel.Parent = mainFrame
 
 local titleCorner = Instance.new("UICorner")
@@ -276,145 +276,91 @@ addToggle(tabVisual, "ESP Viền Player", false, function(v) state.pESP_Outline 
 addToggle(tabVisual, "ESP Thanh Máu", false, function(v) state.pESP_HPBar = v end)
 addToggle(tabVisual, "ESP Số Máu", false, function(v) state.pESP_HPText = v end)
 addToggle(tabVisual, "ESP Tên Player", false, function(v) state.pESP_Name = v end)
-addToggle(schemaVisual or tabVisual, "ESP Quái Vật", false, function(v) state.mESP = v end)
+addToggle(tabVisual, "ESP Quái Vật", false, function(v) state.mESP = v end)
 addToggle(tabVisual, "LoopFB & NoFog", false, function(v) state.loopFB = v end)
 -- ==========================================
--- SCRIPT LƯƠNG VIP PRO (PHẦN 2/2 - HỆ THỐNG XỬ LÝ TOÀN MAP)
+-- SCRIPT LƯƠNG VIP PRO (PHẦN 2/2 - FIX ESP MẤT & FULL BRIGHT)
 -- ==========================================
 
 local espCache = {}
 
-local function removeESP(char)
-    if espCache[char] then
-        pcall(function()
-            if espCache[char].hl then espCache[char].hl:Destroy() end
-            if espCache[char].bg then espCache[char].bg:Destroy() end
-        end)
-        espCache[char] = nil
-    end
-end
-
-local function setupPlayerESP(player)
+local function createESPForCharacter(player, char)
     if player == localPlayer then return end
+    if espCache[char] then return end
     
-    player.CharacterAdded:Connect(function(char)
-        removeESP(char)
-        task.wait(1)
-        local head = char:WaitForChild("Head", 5)
-        if not head then return end
-        
-        local hl = Instance.new("Highlight", char)
-        hl.Name = "HML_Highlight"
-        hl.FillTransparency = 1
-        hl.OutlineColor = Color3.fromRGB(0, 255, 255)
-        hl.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
-        hl.Enabled = false
-        
-        local bg = Instance.new("BillboardGui", head)
-        bg.Name = "HML_Billboard"
-        bg.Size = UDim2.new(0, 200, 0, 60)
-        bg.StudsOffset = Vector3.new(0, 3, 0)
-        bg.AlwaysOnTop = true
-        bg.MaxDistance = 9e9 -- Tăng khoảng cách tối đa lên toàn map
-        bg.Enabled = false
-        
-        local nameLab = Instance.new("TextLabel", bg)
-        nameLab.Size = UDim2.new(1, 0, 0.4, 0)
-        nameLab.BackgroundTransparency = 1
-        nameLab.Text = player.Name
-        nameLab.TextColor3 = Color3.fromRGB(255, 255, 255)
-        nameLab.TextScaled = true
-        nameLab.Font = Enum.Font.GothamBold
-        nameLab.Visible = false
-        
-        local hpLab = Instance.new("TextLabel", bg)
-        hpLab.Size = UDim2.new(1, 0, 0.4, 0)
-        hpLab.Position = UDim2.new(0, 0, 0.4, 0)
-        hpLab.BackgroundTransparency = 1
-        hpLab.TextColor3 = Color3.fromRGB(0, 255, 0)
-        hpLab.TextScaled = true
-        hpLab.Font = Enum.Font.GothamBold
-        hpLab.Visible = false
-        
-        local barBg = Instance.new("Frame", bg)
-        barBg.Size = UDim2.new(0.8, 0, 0.15, 0)
-        barBg.Position = UDim2.new(0.1, 0, 0.85, 0)
-        barBg.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-        barBg.BorderSizePixel = 0
-        barBg.Visible = false
-        
-        local barFill = Instance.new("Frame", barBg)
-        barFill.Size = UDim2.new(1, 0, 1, 0)
-        barFill.BackgroundColor3 = Color3.fromRGB(0, 255, 0)
-        barFill.BorderSizePixel = 0
-        
-        espCache[char] = {hl = hl, bg = bg, name = nameLab, hpText = hpLab, barBg = barBg, barFill = barFill, head = head}
-    end)
+    local head = char:WaitForChild("Head", 5) or char:FindFirstChild("HumanoidRootPart")
+    if not head then return end
     
-    if player.Character then
-        local char = player.Character
-        task.spawn(function()
-            local head = char:WaitForChild("Head", 5)
-            if head then
-                local hl = Instance.new("Highlight", char)
-                hl.Name = "HML_Highlight"
-                hl.FillTransparency = 1
-                hl.OutlineColor = Color3.fromRGB(0, 255, 255)
-                hl.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
-                hl.Enabled = false
-                
-                local bg = Instance.new("BillboardGui", head)
-                bg.Name = "HML_Billboard"
-                bg.Size = UDim2.new(0, 200, 0, 60)
-                bg.StudsOffset = Vector3.new(0, 3, 0)
-                bg.AlwaysOnTop = true
-                bg.MaxDistance = 9e9
-                bg.Enabled = false
-                
-                local nameLab = Instance.new("TextLabel", bg)
-                nameLab.Size = UDim2.new(1, 0, 0.4, 0)
-                nameLab.BackgroundTransparency = 1
-                nameLab.Text = player.Name
-                nameLab.TextColor3 = Color3.fromRGB(255, 255, 255)
-                nameLab.TextScaled = true
-                nameLab.Font = Enum.Font.GothamBold
-                nameLab.Visible = false
-                
-                local hpLab = Instance.new("TextLabel", bg)
-                hpLab.Size = UDim2.new(1, 0, 0.4, 0)
-                hpLab.Position = UDim2.new(0, 0, 0.4, 0)
-                hpLab.BackgroundTransparency = 1
-                hpLab.TextColor3 = Color3.fromRGB(0, 255, 0)
-                hpLab.TextScaled = true
-                hpLab.Font = Enum.Font.GothamBold
-                hpLab.Visible = false
-                
-                local barBg = Instance.new("Frame", bg)
-                barBg.Size = UDim2.new(0.8, 0, 0.15, 0)
-                barBg.Position = UDim2.new(0.1, 0, 0.85, 0)
-                barBg.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-                barBg.BorderSizePixel = 0
-                barBg.Visible = false
-                
-                local barFill = Instance.new("Frame", barBg)
-                barFill.Size = UDim2.new(1, 0, 1, 0)
-                barFill.BackgroundColor3 = Color3.fromRGB(0, 255, 0)
-                barFill.BorderSizePixel = 0
-                
-                espCache[char] = {hl = hl, bg = bg, name = nameLab, hpText = hpLab, barBg = barBg, barFill = barFill, head = head}
-            end
-        end)
-    end
+    local hl = Instance.new("Highlight", char)
+    hl.Name = "HML_Highlight"
+    hl.FillTransparency = 1
+    hl.OutlineColor = Color3.fromRGB(0, 255, 255)
+    hl.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
+    hl.Enabled = false
+    
+    local bg = Instance.new("BillboardGui", head)
+    bg.Name = "HML_Billboard"
+    bg.Size = UDim2.new(0, 200, 0, 60)
+    bg.StudsOffset = Vector3.new(0, 3, 0)
+    bg.AlwaysOnTop = true
+    bg.MaxDistance = math.huge
+    bg.Enabled = false
+    
+    local nameLab = Instance.new("TextLabel", bg)
+    nameLab.Size = UDim2.new(1, 0, 0.4, 0)
+    nameLab.BackgroundTransparency = 1
+    nameLab.Text = player.Name
+    nameLab.TextColor3 = Color3.fromRGB(255, 255, 255)
+    nameLab.TextScaled = true
+    nameLab.Font = Enum.Font.GothamBold
+    nameLab.Visible = false
+    
+    local hpLab = Instance.new("TextLabel", bg)
+    hpLab.Size = UDim2.new(1, 0, 0.4, 0)
+    hpLab.Position = UDim2.new(0, 0, 0.4, 0)
+    hpLab.BackgroundTransparency = 1
+    hpLab.TextColor3 = Color3.fromRGB(0, 255, 0)
+    hpLab.TextScaled = true
+    hpLab.Font = Enum.Font.GothamBold
+    hpLab.Visible = false
+    
+    local barBg = Instance.new("Frame", bg)
+    barBg.Size = UDim2.new(0.8, 0, 0.15, 0)
+    barBg.Position = UDim2.new(0.1, 0, 0.85, 0)
+    barBg.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+    barBg.BorderSizePixel = 0
+    barBg.Visible = false
+    
+    local barFill = Instance.new("Frame", barBg)
+    barFill.Size = UDim2.new(1, 0, 1, 0)
+    barFill.BackgroundColor3 = Color3.fromRGB(0, 255, 0)
+    barFill.BorderSizePixel = 0
+    
+    espCache[char] = {hl = hl, bg = bg, name = nameLab, hpText = hpLab, barBg = barBg, barFill = barFill, head = head}
 end
 
-for _, p in pairs(Players:GetPlayers()) do setupPlayerESP(p) end
-Players.PlayerAdded:Connect(setupPlayerESP)
-Players.PlayerRemoving:Connect(function(p) if p.Character then removeESP(p.Character) end end)
+Players.PlayerAdded:Connect(function(player)
+    player.CharacterAdded:Connect(function(char)
+        task.wait(1)
+        createESPForCharacter(player, char)
+    end)
+end)
+
+for _, p in pairs(Players:GetPlayers()) do
+    if p.Character then
+        createESPForCharacter(p, p.Character)
+    end
+    p.CharacterAdded:Connect(function(char)
+        task.wait(1)
+        createESPForCharacter(p, char)
+    end)
+end
 
 RunService.RenderStepped:Connect(function()
+    -- Cập nhật ESP ổn định không bị mất
     for char, data in pairs(espCache) do
         if not char or not char.Parent or not data.head or not data.head.Parent then
-            removeESP(char)
+            espCache[char] = nil
         else
             local anyESP = state.pESP_Outline or state.pESP_Name or state.pESP_HPText or state.pESP_HPBar
             if anyESP then
@@ -455,11 +401,12 @@ RunService.RenderStepped:Connect(function()
         end 
     end
     
-    -- Khôi phục chuẩn LoopFB & NoFog toàn bản đồ
+    -- Khôi phục LoopFB & NoFog siêu sáng chuẩn bản cũ
     if state.loopFB then
-        Lighting.Ambient = Color3.fromRGB(150, 150, 150)
-        Lighting.Brightness = 2
-        Lighting.ClockTime = 14
+        Lighting.Ambient = Color3.fromRGB(255, 255, 255)
+        Lighting.OutdoorAmbient = Color3.fromRGB(255, 255, 255)
+        Lighting.Brightness = 3
+        Lighting.ClockTime = 12
         Lighting.FogEnd = 999999
         Lighting.GlobalShadows = false
     end
@@ -474,7 +421,7 @@ task.spawn(function()
     end
 end)
 
--- ESP Quái vật (Wendigo / Quái) quét toàn bộ map
+-- ESP Quái vật quét toàn map liên tục
 task.spawn(function()
     while true do
         if state.mESP then
@@ -497,7 +444,7 @@ task.spawn(function()
                                     bg.Name = "HML_MonsterESP"
                                     bg.Size = UDim2.new(0, 180, 0, 45)
                                     bg.AlwaysOnTop = true
-                                    bg.MaxDistance = 9e9
+                                    bg.MaxDistance = math.huge
                                     local tl = Instance.new("TextLabel", bg)
                                     tl.BackgroundTransparency = 1
                                     tl.Size = UDim2.new(1, 0, 1, 0)
@@ -538,4 +485,4 @@ end
 for _, obj in ipairs(Workspace:GetDescendants()) do processPrompt(obj) end
 Workspace.DescendantAdded:Connect(function(obj) task.spawn(function() pcall(function() processPrompt(obj) end) end) end)
 
-print("Đã tải xong Lương VIP PRO - Full Map ESP & LoopFB chuẩn!")
+print("Đã cập nhật bản Lương VIP PRO - Sửa lỗi ESP biến mất và siêu sáng LoopFB!")
