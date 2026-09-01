@@ -1,5 +1,5 @@
 -- ==========================================
--- SCRIPT LƯƠNG VIP PRO (BẢN FIX LỖI ESP & TỐI ƯU)
+-- SCRIPT LƯƠNG VIP PRO (BẢN FIX ESP - PHẦN 1)
 -- ==========================================
 
 local Players = game:GetService("Players")
@@ -10,7 +10,6 @@ local Workspace = game:GetService("Workspace")
 local Lighting = game:GetService("Lighting")
 local cam = Workspace.CurrentCamera
 
--- Biến lưu trạng thái các tính năng
 _G.LuongVIPPRO = _G.LuongVIPPRO or {
     noclip = false, flyOn = false, loopFB = false, infJ = false,
     pESP_Outline = false, pESP_HPBar = false, pESP_HPText = false, pESP_Name = false,
@@ -21,7 +20,6 @@ _G.LuongVIPPRO = _G.LuongVIPPRO or {
 
 local state = _G.LuongVIPPRO
 
--- --- PHẦN 1: GIAO DIỆN CHÍNH ---
 local screenGui = Instance.new("ScreenGui")
 screenGui.Name = "LuongVIPPRO_Master_GUI"
 screenGui.ResetOnSpawn = false
@@ -289,9 +287,10 @@ addToggle(tabVisual, "ESP Số Máu", false, function(v) state.pESP_HPText = v e
 addToggle(tabVisual, "ESP Tên Player", false, function(v) state.pESP_Name = v end)
 addToggle(tabVisual, "ESP Quái Vật", false, function(v) state.mESP = v end)
 addToggle(tabVisual, "LoopFB & NoFog", false, function(v) state.loopFB = v end)
+-- ==========================================
+-- SCRIPT LƯƠNG VIP PRO (BẢN FIX ESP - PHẦN 2)
+-- ==========================================
 
-
--- --- PHẦN 2: HỆ THỐNG ESP ĐÃ FIX CHUẨN XÁC ---
 local espCache = {}
 
 local function removeESP(char)
@@ -309,7 +308,7 @@ local function setupPlayerESP(player)
     
     player.CharacterAdded:Connect(function(char)
         removeESP(char)
-        task.wait(1) -- Chờ load xong nhân vật
+        task.wait(1)
         local head = char:WaitForChild("Head", 5)
         if not head then return end
         
@@ -423,7 +422,6 @@ Players.PlayerRemoving:Connect(function(p)
     if p.Character then removeESP(p.Character) end
 end)
 
--- Vòng lặp RenderStepped mượt mà cập nhật ESP theo thời gian thực
 RunService.RenderStepped:Connect(function()
     for char, data in pairs(espCache) do
         if not char or not char.Parent or not data.head or not data.head.Parent then
@@ -452,7 +450,6 @@ RunService.RenderStepped:Connect(function()
         end
     end
     
-    -- Xử lý vòng lặp tính năng bay, nhảy, noclip và hitbox
     local char = localPlayer.Character
     if char then
         local hum = char:FindFirstChild("Humanoid")
@@ -477,7 +474,6 @@ RunService.RenderStepped:Connect(function()
     end
 end)
 
--- Vòng lặp xử lý tốc độ di chuyển
 task.spawn(function()
     while true do
         if state.speedEnabled and localPlayer.Character and localPlayer.Character:FindFirstChild("Humanoid") then
@@ -487,7 +483,6 @@ task.spawn(function()
     end
 end)
 
--- Vòng lặp ESP Quái vật tối ưu
 task.spawn(function()
     while true do
         if state.mESP then
@@ -507,4 +502,60 @@ task.spawn(function()
                                     bg.Name, bg.Size, bg.AlwaysOnTop = "HML_MonsterESP", UDim2.new(0,150,0,40), true
                                     local tl = Instance.new("TextLabel", bg)
                                     tl.BackgroundTransparency = 1; tl.Size = UDim2.new(1,0,1,0); tl.Text = "Quái Vật"
-                                    tl.TextColor3 = Color3.fromRGB(255, 
+                                    tl.TextColor3 = Color3.fromRGB(255, 0, 0); tl.TextSize = 18; tl.Font = Enum.Font.SourceSansBold
+                                end
+                            end
+                        end
+                    end
+                end
+            end)
+        else
+            pcall(function()
+                for _, m in pairs(Workspace:GetDescendants()) do 
+                    if m.Name == "HML_MonsterESP" or m.Name == "HML_MonsterHighlight" then m:Destroy() end 
+                end
+            end)
+        end
+        task.wait(3)
+    end
+end)
+
+RunService.RenderStepped:Connect(function()
+    if state.loopFB then
+        Lighting.Ambient = Color3.fromRGB(120, 120, 120)
+        Lighting.Brightness = 1.2
+        Lighting.ClockTime = 14
+        Lighting.FogEnd = 9e9
+    end
+end)
+
+UserInputService.JumpRequest:Connect(function()
+    if state.infJ and localPlayer.Character and localPlayer.Character:FindFirstChild("Humanoid") then 
+        localPlayer.Character.Humanoid:ChangeState(Enum.HumanoidStateType.Jumping) 
+    end
+end)
+
+local function processPrompt(prompt)
+    if prompt:IsA("ProximityPrompt") then
+        if state.instantInteractEnabled then
+            prompt.HoldDuration = 0
+            prompt.MaxActivationDistance = math.max(prompt.MaxActivationDistance, 30)
+        end
+    end
+end
+
+for _, obj in ipairs(Workspace:GetDescendants()) do
+    processPrompt(obj)
+end
+
+Workspace.DescendantAdded:Connect(function(obj)
+    task.spawn(function()
+        pcall(function()
+            if state.instantInteractEnabled then
+                processPrompt(obj)
+            end
+        end)
+    end)
+end)
+
+print("Đã tải xong Lương VIP PRO phiên bản Fix ESP hoàn chỉnh!")
