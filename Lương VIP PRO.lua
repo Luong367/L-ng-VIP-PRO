@@ -1,5 +1,5 @@
 -- ==========================================
--- SCRIPT LƯƠNG VIP PRO (BẢN FIX ESP - PHẦN 1)
+-- SCRIPT LƯƠNG VIP PRO (PHẦN 1/2 - TỐI ƯU TOÀN MAP & ESP)
 -- ==========================================
 
 local Players = game:GetService("Players")
@@ -23,12 +23,8 @@ local state = _G.LuongVIPPRO
 local screenGui = Instance.new("ScreenGui")
 screenGui.Name = "LuongVIPPRO_Master_GUI"
 screenGui.ResetOnSpawn = false
-pcall(function()
-    screenGui.Parent = game:GetService("CoreGui")
-end)
-if not screenGui.Parent then
-    screenGui.Parent = localPlayer:WaitForChild("PlayerGui")
-end
+pcall(function() screenGui.Parent = game:GetService("CoreGui") end)
+if not screenGui.Parent then screenGui.Parent = localPlayer:WaitForChild("PlayerGui") end
 
 local toggleButton = Instance.new("ImageButton")
 toggleButton.Size = UDim2.new(0, 50, 0, 50)
@@ -68,7 +64,7 @@ titleLabel.BackgroundColor3 = Color3.fromRGB(25, 25, 38)
 titleLabel.TextColor3 = Color3.fromRGB(0, 255, 200)
 titleLabel.TextSize = 12
 titleLabel.Font = Enum.Font.GothamBold
-titleLabel.Text = "LƯƠNG VIP PRO - MASTER MENU (FIXED ESP)"
+titleLabel.Text = "LƯƠNG VIP PRO - FULL MAP ESP (1/2)"
 titleLabel.Parent = mainFrame
 
 local titleCorner = Instance.new("UICorner")
@@ -254,12 +250,7 @@ local function addInput(tab, name, defaultVal, callback)
 
     textBox.FocusLost:Connect(function()
         local num = tonumber(textBox.Text)
-        if num then
-            callback(num)
-        else
-            textBox.Text = tostring(defaultVal)
-            callback(defaultVal)
-        end
+        if num then callback(num) else textBox.Text = tostring(defaultVal); callback(defaultVal) end
     end)
 end
 
@@ -285,10 +276,10 @@ addToggle(tabVisual, "ESP Viền Player", false, function(v) state.pESP_Outline 
 addToggle(tabVisual, "ESP Thanh Máu", false, function(v) state.pESP_HPBar = v end)
 addToggle(tabVisual, "ESP Số Máu", false, function(v) state.pESP_HPText = v end)
 addToggle(tabVisual, "ESP Tên Player", false, function(v) state.pESP_Name = v end)
-addToggle(tabVisual, "ESP Quái Vật", false, function(v) state.mESP = v end)
+addToggle(schemaVisual or tabVisual, "ESP Quái Vật", false, function(v) state.mESP = v end)
 addToggle(tabVisual, "LoopFB & NoFog", false, function(v) state.loopFB = v end)
 -- ==========================================
--- SCRIPT LƯƠNG VIP PRO (BẢN FIX ESP - PHẦN 2)
+-- SCRIPT LƯƠNG VIP PRO (PHẦN 2/2 - HỆ THỐNG XỬ LÝ TOÀN MAP)
 -- ==========================================
 
 local espCache = {}
@@ -321,9 +312,10 @@ local function setupPlayerESP(player)
         
         local bg = Instance.new("BillboardGui", head)
         bg.Name = "HML_Billboard"
-        bg.Size = UDim2.new(0, 150, 0, 50)
+        bg.Size = UDim2.new(0, 200, 0, 60)
         bg.StudsOffset = Vector3.new(0, 3, 0)
         bg.AlwaysOnTop = true
+        bg.MaxDistance = 9e9 -- Tăng khoảng cách tối đa lên toàn map
         bg.Enabled = false
         
         local nameLab = Instance.new("TextLabel", bg)
@@ -356,7 +348,7 @@ local function setupPlayerESP(player)
         barFill.BackgroundColor3 = Color3.fromRGB(0, 255, 0)
         barFill.BorderSizePixel = 0
         
-        espCache[char] = {hl = hl, bg = bg, name = nameLab, hpText = hpLab, barBg = barBg, barFill = barFill, head = head, char = char}
+        espCache[char] = {hl = hl, bg = bg, name = nameLab, hpText = hpLab, barBg = barBg, barFill = barFill, head = head}
     end)
     
     if player.Character then
@@ -373,9 +365,10 @@ local function setupPlayerESP(player)
                 
                 local bg = Instance.new("BillboardGui", head)
                 bg.Name = "HML_Billboard"
-                bg.Size = UDim2.new(0, 150, 0, 50)
+                bg.Size = UDim2.new(0, 200, 0, 60)
                 bg.StudsOffset = Vector3.new(0, 3, 0)
                 bg.AlwaysOnTop = true
+                bg.MaxDistance = 9e9
                 bg.Enabled = false
                 
                 local nameLab = Instance.new("TextLabel", bg)
@@ -408,19 +401,15 @@ local function setupPlayerESP(player)
                 barFill.BackgroundColor3 = Color3.fromRGB(0, 255, 0)
                 barFill.BorderSizePixel = 0
                 
-                espCache[char] = {hl = hl, bg = bg, name = nameLab, hpText = hpLab, barBg = barBg, barFill = barFill, head = head, char = char}
+                espCache[char] = {hl = hl, bg = bg, name = nameLab, hpText = hpLab, barBg = barBg, barFill = barFill, head = head}
             end
         end)
     end
 end
 
-for _, p in pairs(Players:GetPlayers()) do
-    setupPlayerESP(p)
-end
+for _, p in pairs(Players:GetPlayers()) do setupPlayerESP(p) end
 Players.PlayerAdded:Connect(setupPlayerESP)
-Players.PlayerRemoving:Connect(function(p)
-    if p.Character then removeESP(p.Character) end
-end)
+Players.PlayerRemoving:Connect(function(p) if p.Character then removeESP(p.Character) end end)
 
 RunService.RenderStepped:Connect(function()
     for char, data in pairs(espCache) do
@@ -453,15 +442,8 @@ RunService.RenderStepped:Connect(function()
     local char = localPlayer.Character
     if char then
         local hum = char:FindFirstChild("Humanoid")
-        if state.jumpEn and hum then 
-            hum.UseJumpPower = true 
-            hum.JumpPower = state.jumpPower 
-        end
-        if state.noclip then 
-            for _,v in pairs(char:GetDescendants()) do 
-                if v:IsA("BasePart") then v.CanCollide = false end 
-            end 
-        end
+        if state.jumpEn and hum then hum.UseJumpPower = true; hum.JumpPower = state.jumpPower end
+        if state.noclip then for _,v in pairs(char:GetDescendants()) do if v:IsA("BasePart") then v.CanCollide = false end end end
     end
     
     if state.hitboxOn then 
@@ -471,6 +453,15 @@ RunService.RenderStepped:Connect(function()
                 v.Character.HumanoidRootPart.Transparency = 0.7 
             end 
         end 
+    end
+    
+    -- Khôi phục chuẩn LoopFB & NoFog toàn bản đồ
+    if state.loopFB then
+        Lighting.Ambient = Color3.fromRGB(150, 150, 150)
+        Lighting.Brightness = 2
+        Lighting.ClockTime = 14
+        Lighting.FogEnd = 999999
+        Lighting.GlobalShadows = false
     end
 end)
 
@@ -483,6 +474,7 @@ task.spawn(function()
     end
 end)
 
+-- ESP Quái vật (Wendigo / Quái) quét toàn bộ map
 task.spawn(function()
     while true do
         if state.mESP then
@@ -490,19 +482,29 @@ task.spawn(function()
                 for _, m in pairs(Workspace:GetChildren()) do
                     if m:IsA("Model") and m:FindFirstChild("Humanoid") and not Players:GetPlayerFromCharacter(m) then
                         local mNameLower = m.Name:lower()
-                        if mNameLower:find("wolf") or mNameLower:find("wendigo") or mNameLower:find("stalker") or mNameLower:find("beast") then
+                        if mNameLower:find("wolf") or mNameLower:find("wendigo") or mNameLower:find("stalker") or mNameLower:find("beast") or mNameLower:find("monster") then
                             if not m:FindFirstChild("HML_MonsterHighlight") then
                                 local h = Instance.new("Highlight", m)
-                                h.Name = "HML_MonsterHighlight"; h.OutlineColor = Color3.fromRGB(255, 0, 0); h.FillTransparency = 1; h.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
+                                h.Name = "HML_MonsterHighlight"
+                                h.OutlineColor = Color3.fromRGB(255, 0, 0)
+                                h.FillTransparency = 1
+                                h.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
                             end
                             if not m:FindFirstChild("HML_MonsterESP") then
                                 local root = m:FindFirstChild("Head") or m.PrimaryPart
                                 if root then
                                     local bg = Instance.new("BillboardGui", root)
-                                    bg.Name, bg.Size, bg.AlwaysOnTop = "HML_MonsterESP", UDim2.new(0,150,0,40), true
+                                    bg.Name = "HML_MonsterESP"
+                                    bg.Size = UDim2.new(0, 180, 0, 45)
+                                    bg.AlwaysOnTop = true
+                                    bg.MaxDistance = 9e9
                                     local tl = Instance.new("TextLabel", bg)
-                                    tl.BackgroundTransparency = 1; tl.Size = UDim2.new(1,0,1,0); tl.Text = "Quái Vật"
-                                    tl.TextColor3 = Color3.fromRGB(255, 0, 0); tl.TextSize = 18; tl.Font = Enum.Font.SourceSansBold
+                                    tl.BackgroundTransparency = 1
+                                    tl.Size = UDim2.new(1, 0, 1, 0)
+                                    tl.Text = "QUÁI VẬT (" .. m.Name .. ")"
+                                    tl.TextColor3 = Color3.fromRGB(255, 0, 0)
+                                    tl.TextSize = 16
+                                    tl.Font = Enum.Font.GothamBold
                                 end
                             end
                         end
@@ -516,16 +518,7 @@ task.spawn(function()
                 end
             end)
         end
-        task.wait(3)
-    end
-end)
-
-RunService.RenderStepped:Connect(function()
-    if state.loopFB then
-        Lighting.Ambient = Color3.fromRGB(120, 120, 120)
-        Lighting.Brightness = 1.2
-        Lighting.ClockTime = 14
-        Lighting.FogEnd = 9e9
+        task.wait(2)
     end
 end)
 
@@ -536,26 +529,13 @@ UserInputService.JumpRequest:Connect(function()
 end)
 
 local function processPrompt(prompt)
-    if prompt:IsA("ProximityPrompt") then
-        if state.instantInteractEnabled then
-            prompt.HoldDuration = 0
-            prompt.MaxActivationDistance = math.max(prompt.MaxActivationDistance, 30)
-        end
+    if prompt:IsA("ProximityPrompt") and state.instantInteractEnabled then
+        prompt.HoldDuration = 0
+        prompt.MaxActivationDistance = math.max(prompt.MaxActivationDistance, 30)
     end
 end
 
-for _, obj in ipairs(Workspace:GetDescendants()) do
-    processPrompt(obj)
-end
+for _, obj in ipairs(Workspace:GetDescendants()) do processPrompt(obj) end
+Workspace.DescendantAdded:Connect(function(obj) task.spawn(function() pcall(function() processPrompt(obj) end) end) end)
 
-Workspace.DescendantAdded:Connect(function(obj)
-    task.spawn(function()
-        pcall(function()
-            if state.instantInteractEnabled then
-                processPrompt(obj)
-            end
-        end)
-    end)
-end)
-
-print("Đã tải xong Lương VIP PRO phiên bản Fix ESP hoàn chỉnh!")
+print("Đã tải xong Lương VIP PRO - Full Map ESP & LoopFB chuẩn!")
