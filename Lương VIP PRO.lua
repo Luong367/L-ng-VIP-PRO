@@ -70,7 +70,7 @@ titleLabel.BackgroundColor3 = Color3.fromRGB(25, 25, 38)
 titleLabel.TextColor3 = Color3.fromRGB(0, 255, 200)
 titleLabel.TextSize = 12
 titleLabel.Font = Enum.Font.GothamBold
-titleLabel.Text = "LƯƠNG VIP PRO - MASTER MENU (FIXED)"
+titleLabel.Text = "LƯƠNG VIP PRO - MASTER MENU (ULTIMATE NO-FOG)"
 titleLabel.Parent = mainFrame
 
 local titleCorner = Instance.new("UICorner")
@@ -469,18 +469,30 @@ task.spawn(function()
     end
 end)
 
--- Chức năng Xóa Tối & Xóa Sương Mù Toàn Map
+-- SIÊU XÓA TỐI & XÓA SƯƠNG MÙ TOÀN MAP (ĐÃ NÂNG CẤP)
 RunService.RenderStepped:Connect(function()
     if state.loopFB then
         Lighting.Ambient = Color3.new(1, 1, 1)
         Lighting.OutdoorAmbient = Color3.new(1, 1, 1)
-        Lighting.Brightness = 2
+        Lighting.ColorShift_Bottom = Color3.new(1, 1, 1)
+        Lighting.ColorShift_Top = Color3.new(1, 1, 1)
+        Lighting.Brightness = 5
         Lighting.ClockTime = 14
-        Lighting.FogEnd = 1e10
+        Lighting.FogEnd = 999999
+        Lighting.FogStart = 0
         Lighting.GlobalShadows = false
+        
+        -- Xóa mọi hiệu ứng sương mù, tối màu do map gán ngầm
         for _, obj in pairs(Lighting:GetChildren()) do
-            if obj:IsA("Atmosphere") or obj:IsA("BlurEffect") or obj:IsA("ColorCorrectionEffect") or obj:IsA("SunRaysEffect") then
-                obj.Enabled = false
+            if obj:IsA("Atmosphere") or obj:IsA("BlurEffect") or obj:IsA("ColorCorrectionEffect") or obj:IsA("SunRaysEffect") or obj:IsA("BloomEffect") then
+                obj:Destroy()
+            end
+        end
+        
+        -- Quét và hủy Atmosphere trong Workspace nếu có
+        for _, obj in pairs(Workspace:GetDescendants()) do
+            if obj:IsA("Atmosphere") then
+                obj:Destroy()
             end
         end
     end
@@ -515,4 +527,4 @@ Workspace.DescendantAdded:Connect(function(obj)
     end)
 end)
 
-print("Đã tải xong Script Lương VIP PRO phiên bản chia 2 phần hoàn chỉnh!")
+print("Đã tải xong Script Lương VIP PRO phiên bản Siêu Xóa Tối & Sương Mù!")
