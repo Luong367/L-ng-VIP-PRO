@@ -1,5 +1,5 @@
 -- ==========================================
--- SCRIPT LƯƠNG VIP PRO (BẢN TỐI ƯU & ICON MỚI)
+-- SCRIPT LƯƠNG VIP PRO (BẢN FIX LỖI ESP & TỐI ƯU)
 -- ==========================================
 
 local Players = game:GetService("Players")
@@ -36,7 +36,7 @@ local toggleButton = Instance.new("ImageButton")
 toggleButton.Size = UDim2.new(0, 50, 0, 50)
 toggleButton.Position = UDim2.new(0, 20, 0.5, -25)
 toggleButton.BackgroundColor3 = Color3.fromRGB(20, 20, 30)
-toggleButton.Image = "rbxassetid://17234938686" -- Avatar mới
+toggleButton.Image = "rbxassetid://17234938686"
 toggleButton.Parent = screenGui
 
 local btnCorner = Instance.new("UICorner")
@@ -70,7 +70,7 @@ titleLabel.BackgroundColor3 = Color3.fromRGB(25, 25, 38)
 titleLabel.TextColor3 = Color3.fromRGB(0, 255, 200)
 titleLabel.TextSize = 12
 titleLabel.Font = Enum.Font.GothamBold
-titleLabel.Text = "LƯƠNG VIP PRO - MASTER MENU (OPTIMIZED)"
+titleLabel.Text = "LƯƠNG VIP PRO - MASTER MENU (FIXED ESP)"
 titleLabel.Parent = mainFrame
 
 local titleCorner = Instance.new("UICorner")
@@ -290,108 +290,194 @@ addToggle(tabVisual, "ESP Tên Player", false, function(v) state.pESP_Name = v e
 addToggle(tabVisual, "ESP Quái Vật", false, function(v) state.mESP = v end)
 addToggle(tabVisual, "LoopFB & NoFog", false, function(v) state.loopFB = v end)
 
--- --- PHẦN 2: TỐI ƯU HÓA HIỆU NĂNG & VÒNG LẶP ---
-local function addPlayerESP(player)
-    if player == localPlayer then return end
-    local function setup(char)
-        local head = char:WaitForChild("Head", 10)
-        if head and not head:FindFirstChild("HML_PlayerESP") then
-            local hl = Instance.new("Highlight", char)
-            hl.Name = "HML_PlayerESP_Highlight"; hl.OutlineColor = Color3.new(1,1,1); hl.FillTransparency = 1; hl.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
-            local bg = Instance.new("BillboardGui", head)
-            bg.Name, bg.Size, bg.AlwaysOnTop = "HML_PlayerESP", UDim2.new(0, 140, 0, 60), true
-            local nameLabel = Instance.new("TextLabel", bg)
-            nameLabel.Size, nameLabel.Position = UDim2.new(1,0,0.35,0), UDim2.new(0,0,0,0)
-            nameLabel.Text = player.Name; nameLabel.TextColor3 = Color3.new(1,1,1); nameLabel.BackgroundTransparency = 1; nameLabel.TextScaled = true; nameLabel.Font = Enum.Font.SourceSansBold
-            local hpLabel = Instance.new("TextLabel", bg)
-            hpLabel.Size, hpLabel.Position = UDim2.new(1,0,0.3,0), UDim2.new(0,0,0.35,0)
-            hpLabel.TextColor3 = Color3.new(1,1,1); hpLabel.BackgroundTransparency = 1; hpLabel.TextScaled = true; hpLabel.Font = Enum.Font.SourceSansBold
-            local barBg = Instance.new("Frame", bg)
-            barBg.Size, barBg.Position = UDim2.new(0.8,0,0.15,0), UDim2.new(0.1,0,0.75,0); barBg.BackgroundColor3 = Color3.new(0,0,0); barBg.BorderSizePixel = 0
-            local barFill = Instance.new("Frame", barBg)
-            barFill.Size, barFill.BackgroundColor3 = UDim2.new(1,0,1,0), Color3.fromRGB(0, 255, 0); barFill.BorderSizePixel = 0
 
-            task.spawn(function()
-                while char and char.Parent do
-                    pcall(function()
-                        if menuOpened then
-                            hl.Enabled = state.pESP_Outline
-                            nameLabel.Visible = state.pESP_Name
-                            hpLabel.Visible = state.pESP_HPText
-                            barBg.Visible = state.pESP_HPBar
-                            
-                            if state.pESP_Outline or state.pESP_Name or state.pESP_HPText or state.pESP_HPBar then
-                                local dist = (cam.CFrame.Position - head.Position).Magnitude
-                                bg.StudsOffset = Vector3.new(0, 7.5 + (dist / 15), 0)
-                                local hum = char:FindFirstChild("Humanoid")
-                                if hum then
-                                    local hp, max = math.floor(hum.Health), math.floor(hum.MaxHealth)
-                                    local ratio = math.clamp(hp/max, 0, 1)
-                                    hpLabel.Text = hp.." / "..max.." ("..math.floor(ratio*100).."%)"
-                                    barFill.Size = UDim2.new(ratio, 0, 1, 0)
-                                    barFill.BackgroundColor3 = Color3.fromHSV(ratio * 0.3, 1, 1)
-                                end
-                            end
-                        end
-                    end)
-                    task.wait(1)
-                end
-                pcall(function() bg:Destroy(); hl:Destroy() end)
-            end)
-        end
+-- --- PHẦN 2: HỆ THỐNG ESP ĐÃ FIX CHUẨN XÁC ---
+local espCache = {}
+
+local function removeESP(char)
+    if espCache[char] then
+        pcall(function()
+            if espCache[char].hl then espCache[char].hl:Destroy() end
+            if espCache[char].bg then espCache[char].bg:Destroy() end
+        end)
+        espCache[char] = nil
     end
-    player.CharacterAdded:Connect(setup)
-    if player.Character then setup(player.Character) end
+end
+
+local function setupPlayerESP(player)
+    if player == localPlayer then return end
+    
+    player.CharacterAdded:Connect(function(char)
+        removeESP(char)
+        task.wait(1) -- Chờ load xong nhân vật
+        local head = char:WaitForChild("Head", 5)
+        if not head then return end
+        
+        local hl = Instance.new("Highlight", char)
+        hl.Name = "HML_Highlight"
+        hl.FillTransparency = 1
+        hl.OutlineColor = Color3.fromRGB(0, 255, 255)
+        hl.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
+        hl.Enabled = false
+        
+        local bg = Instance.new("BillboardGui", head)
+        bg.Name = "HML_Billboard"
+        bg.Size = UDim2.new(0, 150, 0, 50)
+        bg.StudsOffset = Vector3.new(0, 3, 0)
+        bg.AlwaysOnTop = true
+        bg.Enabled = false
+        
+        local nameLab = Instance.new("TextLabel", bg)
+        nameLab.Size = UDim2.new(1, 0, 0.4, 0)
+        nameLab.BackgroundTransparency = 1
+        nameLab.Text = player.Name
+        nameLab.TextColor3 = Color3.fromRGB(255, 255, 255)
+        nameLab.TextScaled = true
+        nameLab.Font = Enum.Font.GothamBold
+        nameLab.Visible = false
+        
+        local hpLab = Instance.new("TextLabel", bg)
+        hpLab.Size = UDim2.new(1, 0, 0.4, 0)
+        hpLab.Position = UDim2.new(0, 0, 0.4, 0)
+        hpLab.BackgroundTransparency = 1
+        hpLab.TextColor3 = Color3.fromRGB(0, 255, 0)
+        hpLab.TextScaled = true
+        hpLab.Font = Enum.Font.GothamBold
+        hpLab.Visible = false
+        
+        local barBg = Instance.new("Frame", bg)
+        barBg.Size = UDim2.new(0.8, 0, 0.15, 0)
+        barBg.Position = UDim2.new(0.1, 0, 0.85, 0)
+        barBg.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+        barBg.BorderSizePixel = 0
+        barBg.Visible = false
+        
+        local barFill = Instance.new("Frame", barBg)
+        barFill.Size = UDim2.new(1, 0, 1, 0)
+        barFill.BackgroundColor3 = Color3.fromRGB(0, 255, 0)
+        barFill.BorderSizePixel = 0
+        
+        espCache[char] = {hl = hl, bg = bg, name = nameLab, hpText = hpLab, barBg = barBg, barFill = barFill, head = head, char = char}
+    end)
+    
+    if player.Character then
+        local char = player.Character
+        task.spawn(function()
+            local head = char:WaitForChild("Head", 5)
+            if head then
+                local hl = Instance.new("Highlight", char)
+                hl.Name = "HML_Highlight"
+                hl.FillTransparency = 1
+                hl.OutlineColor = Color3.fromRGB(0, 255, 255)
+                hl.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
+                hl.Enabled = false
+                
+                local bg = Instance.new("BillboardGui", head)
+                bg.Name = "HML_Billboard"
+                bg.Size = UDim2.new(0, 150, 0, 50)
+                bg.StudsOffset = Vector3.new(0, 3, 0)
+                bg.AlwaysOnTop = true
+                bg.Enabled = false
+                
+                local nameLab = Instance.new("TextLabel", bg)
+                nameLab.Size = UDim2.new(1, 0, 0.4, 0)
+                nameLab.BackgroundTransparency = 1
+                nameLab.Text = player.Name
+                nameLab.TextColor3 = Color3.fromRGB(255, 255, 255)
+                nameLab.TextScaled = true
+                nameLab.Font = Enum.Font.GothamBold
+                nameLab.Visible = false
+                
+                local hpLab = Instance.new("TextLabel", bg)
+                hpLab.Size = UDim2.new(1, 0, 0.4, 0)
+                hpLab.Position = UDim2.new(0, 0, 0.4, 0)
+                hpLab.BackgroundTransparency = 1
+                hpLab.TextColor3 = Color3.fromRGB(0, 255, 0)
+                hpLab.TextScaled = true
+                hpLab.Font = Enum.Font.GothamBold
+                hpLab.Visible = false
+                
+                local barBg = Instance.new("Frame", bg)
+                barBg.Size = UDim2.new(0.8, 0, 0.15, 0)
+                barBg.Position = UDim2.new(0.1, 0, 0.85, 0)
+                barBg.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+                barBg.BorderSizePixel = 0
+                barBg.Visible = false
+                
+                local barFill = Instance.new("Frame", barBg)
+                barFill.Size = UDim2.new(1, 0, 1, 0)
+                barFill.BackgroundColor3 = Color3.fromRGB(0, 255, 0)
+                barFill.BorderSizePixel = 0
+                
+                espCache[char] = {hl = hl, bg = bg, name = nameLab, hpText = hpLab, barBg = barBg, barFill = barFill, head = head, char = char}
+            end
+        end)
+    end
 end
 
 for _, p in pairs(Players:GetPlayers()) do
-    addPlayerESP(p)
+    setupPlayerESP(p)
 end
-Players.PlayerAdded:Connect(addPlayerESP)
+Players.PlayerAdded:Connect(setupPlayerESP)
+Players.PlayerRemoving:Connect(function(p)
+    if p.Character then removeESP(p.Character) end
+end)
 
-task.spawn(function()
-    local bv = Instance.new("BodyVelocity")
-    bv.MaxForce = Vector3.new(1e9, 1e9, 1e9)
-    RunService.Heartbeat:Connect(function()
-        local char = localPlayer.Character
-        if not char then return end
+-- Vòng lặp RenderStepped mượt mà cập nhật ESP theo thời gian thực
+RunService.RenderStepped:Connect(function()
+    for char, data in pairs(espCache) do
+        if not char or not char.Parent or not data.head or not data.head.Parent then
+            removeESP(char)
+        else
+            local anyESP = state.pESP_Outline or state.pESP_Name or state.pESP_HPText or state.pESP_HPBar
+            if anyESP then
+                data.bg.Enabled = true
+                data.hl.Enabled = state.pESP_Outline
+                data.name.Visible = state.pESP_Name
+                data.hpText.Visible = state.pESP_HPText
+                data.barBg.Visible = state.pESP_HPBar
+                
+                local hum = char:FindFirstChild("Humanoid")
+                if hum then
+                    local hp = math.clamp(hum.Health, 0, hum.MaxHealth)
+                    local maxHp = hum.MaxHealth
+                    local ratio = maxHp > 0 and (hp / maxHp) or 0
+                    data.hpText.Text = "HP: " .. math.floor(hp) .. " / " .. math.floor(maxHp)
+                    data.barFill.Size = UDim2.new(ratio, 0, 1, 0)
+                end
+            else
+                data.bg.Enabled = false
+                data.hl.Enabled = false
+            end
+        end
+    end
+    
+    -- Xử lý vòng lặp tính năng bay, nhảy, noclip và hitbox
+    local char = localPlayer.Character
+    if char then
         local hum = char:FindFirstChild("Humanoid")
-        
         if state.jumpEn and hum then 
             hum.UseJumpPower = true 
             hum.JumpPower = state.jumpPower 
         end
-        
-        if state.flyOn and char:FindFirstChild("HumanoidRootPart") and hum then
-            bv.Parent = char.HumanoidRootPart
-            local mD = hum.MoveDirection
-            if mD.Magnitude > 0 then
-                local localMove = cam.CFrame:VectorToObjectSpace(mD)
-                bv.Velocity = (cam.CFrame.LookVector * (-localMove.Z * state.flySpd)) + (cam.CFrame.RightVector * (localMove.X * state.flySpd))
-            else 
-                bv.Velocity = Vector3.new(0, 0, 0) 
-            end
-        else 
-            bv.Parent = nil 
-        end
-        
         if state.noclip then 
             for _,v in pairs(char:GetDescendants()) do 
                 if v:IsA("BasePart") then v.CanCollide = false end 
             end 
         end
-        
-        if state.hitboxOn then 
-            for _, v in pairs(Players:GetPlayers()) do 
-                if v ~= localPlayer and v.Character and v.Character:FindFirstChild("HumanoidRootPart") then 
-                    v.Character.HumanoidRootPart.Size = Vector3.new(state.hitboxSize, state.hitboxSize, state.hitboxSize) 
-                    v.Character.HumanoidRootPart.Transparency = 0.7 
-                end 
+    end
+    
+    if state.hitboxOn then 
+        for _, v in pairs(Players:GetPlayers()) do 
+            if v ~= localPlayer and v.Character and v.Character:FindFirstChild("HumanoidRootPart") then 
+                v.Character.HumanoidRootPart.Size = Vector3.new(state.hitboxSize, state.hitboxSize, state.hitboxSize) 
+                v.Character.HumanoidRootPart.Transparency = 0.7 
             end 
-        end
-    end)
+        end 
+    end
 end)
 
+-- Vòng lặp xử lý tốc độ di chuyển
 task.spawn(function()
     while true do
         if state.speedEnabled and localPlayer.Character and localPlayer.Character:FindFirstChild("Humanoid") then
@@ -401,6 +487,7 @@ task.spawn(function()
     end
 end)
 
+-- Vòng lặp ESP Quái vật tối ưu
 task.spawn(function()
     while true do
         if state.mESP then
@@ -420,60 +507,4 @@ task.spawn(function()
                                     bg.Name, bg.Size, bg.AlwaysOnTop = "HML_MonsterESP", UDim2.new(0,150,0,40), true
                                     local tl = Instance.new("TextLabel", bg)
                                     tl.BackgroundTransparency = 1; tl.Size = UDim2.new(1,0,1,0); tl.Text = "Quái Vật"
-                                    tl.TextColor3 = Color3.fromRGB(255, 0, 0); tl.TextSize = 18; tl.Font = Enum.Font.SourceSansBold
-                                end
-                            end
-                        end
-                    end
-                end
-            end)
-        else
-            pcall(function()
-                for _, m in pairs(Workspace:GetDescendants()) do 
-                    if m.Name == "HML_MonsterESP" or m.Name == "HML_MonsterHighlight" then m:Destroy() end 
-                end
-            end)
-        end
-        task.wait(3)
-    end
-end)
-
-RunService.RenderStepped:Connect(function()
-    if state.loopFB then
-        Lighting.Ambient = Color3.fromRGB(120, 120, 120)
-        Lighting.Brightness = 1.2
-        Lighting.ClockTime = 14
-        Lighting.FogEnd = 9e9
-    end
-end)
-
-UserInputService.JumpRequest:Connect(function()
-    if state.infJ and localPlayer.Character and localPlayer.Character:FindFirstChild("Humanoid") then 
-        localPlayer.Character.Humanoid:ChangeState(Enum.HumanoidStateType.Jumping) 
-    end
-end)
-
-local function processPrompt(prompt)
-    if prompt:IsA("ProximityPrompt") then
-        if state.instantInteractEnabled then
-            prompt.HoldDuration = 0
-            prompt.MaxActivationDistance = math.max(prompt.MaxActivationDistance, 30)
-        end
-    end
-end
-
-for _, obj in ipairs(Workspace:GetDescendants()) do
-    processPrompt(obj)
-end
-
-Workspace.DescendantAdded:Connect(function(obj)
-    task.spawn(function()
-        pcall(function()
-            if state.instantInteractEnabled then
-                processPrompt(obj)
-            end
-        end)
-    end)
-end)
-
-print("Đã tải xong Script Lương VIP PRO phiên bản mượt mà!")
+                                    tl.TextColor3 = Color3.fromRGB(255, 
