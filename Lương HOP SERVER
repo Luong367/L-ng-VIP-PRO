@@ -1,0 +1,147 @@
+>= 1 and server.playing < server.maxPlayers and server.id ~= game.JobId then
+                    table.insert(servers, server)
+                end
+            end
+            cursor = result.nextPageCursor or ""
+        else
+            break
+        end
+    until cursor == "" or #servers > 50
+
+    if #servers > 0 then
+        table.sort(servers, function(a, b)
+            return a.playing < b.playing
+        end)
+        
+        local targetServer = servers[1]
+        StatusLabel.Text = "Đang vào server " .. targetServer.playing .. " người..."
+        task.wait(0.5)
+        TeleportService:TeleportToPlaceInstance(game.PlaceId, targetServer.id, lp)
+    else
+        StatusLabel.Text = "Không tìm thấy, đang thử lại..."
+        TeleportService:Teleport(game.PlaceId, lp)
+    end
+end
+
+-- Hàm Hop Server Có Chỉ Số Thấp Hơn (Ưu tiên server có tổng lượng player thấp hoặc ping ổn định để tránh cao thủ)local function hopLowerStatServer()
+    StatusLabel.Text = "Trạng thái: Đang quét server cấp thấp..."
+    local servers = {}
+    local cursor = ""
+    
+    repeat
+        local url = "https://games.roblox.com/v1/games/" .. game.PlaceId .. "/servers/Public?sortOrder=Asc&limit=100"
+        if cursor ~= "" then
+            url = url .. "&cursor=" .. cursor
+        end
+        
+        local success, result = pcall(function()
+            return HttpService:JSONDecode(game:HttpGet(url))
+        end)
+        
+        if success and result and result.data then
+            for _, server in ipairs(result.data) do
+                -- Lọc các server có số lượng người chơi vừa phải (từ 2 đến 4 người) để khả năng cao là người mới/level thấp
+                if server.playing and server.playing >= 2 and server.playing <= 4 and server.id ~= game.JobId then
+                    table.insert(servers, server)
+                end
+            end
+            cursor = result.nextPageCursor or ""
+        else
+            break
+        end
+    until cursor == "" or #servers > 50
+
+    -- Nếu không tìm thấy nhóm 2-4 người, mở rộng tìm server dưới 6 người
+    if #servers == 0 then
+        cursor = ""
+        repeat
+            local url = "https://games.roblox.com/v1/games/" .. game.PlaceId .. "/servers/Public?sortOrder=Asc&limit=100"
+            if cursor ~= "" then
+                url = url .. "&cursor=" .. cursor
+            end
+            local success, result = pcall(function()
+                return HttpService:JSONDecode(game:HttpGet(url))
+            end)
+            if success and result and result.data then
+                for _, server in ipairs(result.data) do
+                    if server.playing and server.playing < 6 and server.id ~= game.JobId then
+                        table.insert(servers, server)
+                    end
+                end
+                cursor = result.nextPageCursor or ""
+            else
+                break
+            end
+        until cursor == "" or #servers > 50
+    end
+
+    if #servers > 0 then
+        table.sort(servers, function(a, b)
+            return a.playing < b.playing
+        end)
+        
+        local targetServer = servers[1]
+        StatusLabel.Text = "Đang vào server tiềm năng (" .. targetServer.playing .. " người)..."
+        task.wait(0.5)
+        TeleportService:TeleportToPlaceInstance(game.PlaceId, targetServer.id, lp)
+    else
+        StatusLabel.Text = "Không tìm thấy, đang dùng chế độ mặc định..."
+        hopEmptyServer()
+    end
+end
+
+-- Hàm Hop Server Nhiều Người
+local function hopMostPopulatedServer()
+    StatusLabel.Text = "Trạng thái: Đang tìm server đông..."
+    local servers = {}
+    local cursor = ""
+    
+    repeat
+        local url = "https://games.roblox.com/v1/games/" .. game.PlaceId .. "/servers/Public?sortOrder=Desc&limit=100"
+        if cursor ~= "" then
+            url = url .. "&cursor=" .. cursor
+        end
+        
+        local success, result = pcall(function()
+            return HttpService:JSONDecode(game:HttpGet(url))
+        end)
+        
+        if success and result and result.data then
+            for _, server in ipairs(result.data) do
+                if server.playing and server.maxPlayers and server.playing < server.maxPlayers and server.id ~= game.JobId then
+                    table.insert(servers, server)
+                end
+            end
+            cursor = result.nextPageCursor or ""
+        else
+            break
+        end
+    until cursor == "" or #servers > 50
+
+    if #servers > 0 then
+        table.sort(servers, function(a, b)
+            return a.playing > b.playing
+        end)
+        
+        local targetServer = servers[1]
+        StatusLabel.Text = "Đang vào server " .. targetServer.playing .. " người..."
+        task.wait(0.5)
+        TeleportService:TeleportToPlaceInstance(game.PlaceId, targetServer.id, lp)
+    else
+        StatusLabel.Text = "Không tìm thấy, đang thử lại..."
+        TeleportService:Teleport(game.PlaceId, lp)
+    end
+end
+
+-- Gắn sự kiện bấm nút
+VipButton.MouseButton1Click:Connect(function()
+    pcall(hopEmptyServer)
+end)
+
+LowStatButton.MouseButton1Click:Connect(function()
+    pcall(hopLowerStatServer)
+end)
+
+PopButton.MouseButton1Click:Connect(function()
+    pcall(hopMostPopulatedServer)
+end)
