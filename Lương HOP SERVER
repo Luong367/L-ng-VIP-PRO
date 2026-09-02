@@ -1,4 +1,140 @@
->= 1 and server.playing < server.maxPlayers and server.id ~= game.JobId then
+-- [[ LƯƠNG HÚPE V1 PREMIUM - BANANA HUB GUI ]]
+-- Giao diện phong cách Banana Hub tích hợp tính năng Server Hop + Săn Server yếu hơn
+
+local HttpService = game:GetService("HttpService")
+local TeleportService = game:GetService("TeleportService")
+local Players = game:GetService("Players")
+local lp = Players.LocalPlayer
+
+-- Tạo ScreenGui chính kiểu Banana Hub
+local BananaGui = Instance.new("ScreenGui")
+BananaGui.Name = "BananaHopGui"
+BananaGui.Parent = game.CoreGui
+BananaGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+
+-- Khung Main (Tăng chiều cao một chút để chứa thêm nút mới)
+local MainFrame = Instance.new("Frame")
+MainFrame.Name = "MainFrame"
+MainFrame.Parent = BananaGui
+MainFrame.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+MainFrame.BorderSizePixel = 0
+MainFrame.Position = UDim2.new(0.5, -160, 0.5, -135)
+MainFrame.Size = UDim2.new(0, 320, 0, 270)
+MainFrame.Active = true
+MainFrame.Draggable = true -- Cho phép kéo thả bảng
+
+-- Bo góc khung chính
+local UICorner = Instance.new("UICorner")
+UICorner.CornerRadius = UDim.new(0, 10)
+UICorner.Parent = MainFrame
+
+-- Tiêu đề (Header)
+local Header = Instance.new("Frame")
+Header.Name = "Header"
+Header.Parent = MainFrame
+Header.BackgroundColor3 = Color3.fromRGB(255, 170, 0) -- Màu vàng đặc trưng Banana
+Header.BorderSizePixel = 0
+Header.Size = UDim2.new(1, 0, 0, 45)
+
+local HeaderCorner = Instance.new("UICorner")
+HeaderCorner.CornerRadius = UDim.new(0, 10)
+HeaderCorner.Parent = Header
+
+-- Sửa góc dưới header cho phẳng
+local FixHeader = Instance.new("Frame")
+FixHeader.Parent = Header
+FixHeader.BackgroundColor3 = Color3.fromRGB(255, 170, 0)
+FixHeader.BorderSizePixel = 0
+FixHeader.Position = UDim2.new(0, 0, 0.8, 0)
+FixHeader.Size = UDim2.new(1, 0, 0.2, 0)
+
+local TitleLabel = Instance.new("TextLabel")
+TitleLabel.Parent = Header
+TitleLabel.BackgroundTransparency = 1
+TitleLabel.Size = UDim2.new(1, 0, 1, 0)
+TitleLabel.Font = Enum.Font.FredokaOne
+TitleLabel.Text = "🍌 BANANA HOP SERVER 🍌"
+TitleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+TitleLabel.TextSize = 16
+
+-- Nút 1: Vào Server VIP Trống (Farm 1 mình)
+local VipButton = Instance.new("TextButton")
+VipButton.Name = "VipButton"
+VipButton.Parent = MainFrame
+VipButton.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
+VipButton.Position = UDim2.new(0.1, 0, 0.22, 0)
+VipButton.Size = UDim2.new(0.8, 0, 0, 38)
+VipButton.Font = Enum.Font.GothamBold
+VipButton.Text = "🛡️ Vào Server VIP (Farm 1 mình)"
+VipButton.TextColor3 = Color3.fromRGB(0, 255, 127)
+VipButton.TextSize = 13
+
+local VipCorner = Instance.new("UICorner")
+VipCorner.CornerRadius = UDim.new(0, 8)
+VipCorner.Parent = VipButton
+
+-- Nút 2: Vào Server Người Chơi Thấp Hơn (MỚI)
+local LowStatButton = Instance.new("TextButton")
+LowStatButton.Name = "LowStatButton"
+LowStatButton.Parent = MainFrame
+LowStatButton.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
+LowStatButton.Position = UDim2.new(0.1, 0, 0.42, 0)
+LowStatButton.Size = UDim2.new(0.8, 0, 0, 38)
+LowStatButton.Font = Enum.Font.GothamBold
+LowStatButton.Text = "📉 Server Ít/Thấp Hấp Dẫn Hơn"
+LowStatButton.TextColor3 = Color3.fromRGB(255, 204, 0)
+LowStatButton.TextSize = 13
+
+local LowStatCorner = Instance.new("UICorner")
+LowStatCorner.CornerRadius = UDim.new(0, 8)
+LowStatCorner.Parent = LowStatButton
+
+-- Nút 3: Vào Server Nhiều Người
+local PopButton = Instance.new("TextButton")
+PopButton.Name = "PopButton"
+PopButton.Parent = MainFrame
+PopButton.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
+PopButton.Position = UDim2.new(0.1, 0, 0.62, 0)
+PopButton.Size = UDim2.new(0.8, 0, 0, 38)
+PopButton.Font = Enum.Font.GothamBold
+PopButton.Text = "🔥 Vào Server Nhiều Người"
+PopButton.TextColor3 = Color3.fromRGB(255, 100, 100)
+PopButton.TextSize = 13
+
+local PopCorner = Instance.new("UICorner")
+PopCorner.CornerRadius = UDim.new(0, 8)
+PopCorner.Parent = PopButton
+
+-- Nhãn thông báo trạng thái nhỏ
+local StatusLabel = Instance.new("TextLabel")
+StatusLabel.Parent = MainFrame
+StatusLabel.BackgroundTransparency = 1
+StatusLabel.Position = UDim2.new(0, 0, 0.85, 0)
+StatusLabel.Size = UDim2.new(1, 0, 0, 25)
+StatusLabel.Font = Enum.Font.Gotham
+StatusLabel.Text = "Trạng thái: Sẵn sàng hoạt động"
+StatusLabel.TextColor3 = Color3.fromRGB(180, 180, 180)
+StatusLabel.TextSize = 11
+
+-- Hàm Hop Server Trống (Ít người / Riêng tư)
+local function hopEmptyServer()
+    StatusLabel.Text = "Trạng thái: Đang tìm server trống..."
+    local servers = {}
+    local cursor = ""
+    
+    repeat
+        local url = "https://games.roblox.com/v1/games/" .. game.PlaceId .. "/servers/Public?sortOrder=Asc&limit=100"
+        if cursor ~= "" then
+            url = url .. "&cursor=" .. cursor
+        end
+        
+        local success, result = pcall(function()
+            return HttpService:JSONDecode(game:HttpGet(url))
+        end)
+        
+        if success and result and result.data then
+            for _, server in ipairs(result.data) do
+                if server.playing and server.playing >= 1 and server.playing < server.maxPlayers and server.id ~= game.JobId then
                     table.insert(servers, server)
                 end
             end
@@ -23,7 +159,8 @@
     end
 end
 
--- Hàm Hop Server Có Chỉ Số Thấp Hơn (Ưu tiên server có tổng lượng player thấp hoặc ping ổn định để tránh cao thủ)local function hopLowerStatServer()
+-- Hàm Hop Server Có Chỉ Số Thấp Hơn (Ưu tiên server có tổng lượng player thấp hoặc ping ổn định để tránh cao thủ)
+local function hopLowerStatServer()
     StatusLabel.Text = "Trạng thái: Đang quét server cấp thấp..."
     local servers = {}
     local cursor = ""
